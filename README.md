@@ -19,7 +19,7 @@ git clone https://github.com/ranjithmanokaran/Twitter-Scraping.git
 ```
 Then, navigate to the project directory and run the following command to start the Streamlit app:
 ```
-streamlit run TwitterScraping.git.py
+streamlit run TwitterScraping.py
 ```
 # Usage
 Once the Streamlit app is running, you can enter a keyword or hashtag to search for, select a date range, and set the maximum number of tweets to scrape. Once you click the "Scrape Data" button, the app will scrape the Twitter data using the specified criteria and display it in a table on the page. You can then click the "Save to Database" button to save the scraped data to a MongoDB database, along with the search criteria used to scrape the data.
