@@ -4,8 +4,6 @@ import streamlit as st
 import pymongo
 from io import BytesIO
 
-# Define function to scrape tweets and create DataFrame
-
 
 def scrape_tweets(start_date, end_date, keyword, tweet_limit):
     # Define search query
@@ -22,7 +20,7 @@ def scrape_tweets(start_date, end_date, keyword, tweet_limit):
         date = tweet.date
         id = tweet.id
         url = tweet.url
-        content = tweet.content
+        content = tweet.rawContent
         user = tweet.user.username
         reply_count = tweet.replyCount
         retweet_count = tweet.retweetCount
@@ -39,8 +37,6 @@ def scrape_tweets(start_date, end_date, keyword, tweet_limit):
     tweets_df = pd.DataFrame(tweets_list)
 
     return tweets_df
-
-# Define a function to generate a CSV file from a dataframe
 
 
 def download_csv(df):
@@ -74,40 +70,47 @@ tweet_limit = st.number_input('Tweet Limit', min_value=1, max_value=1000)
 
 # Check if user has entered all required inputs
 if keyword and start_date and end_date and tweet_limit:
-    # Scrape tweets and create DataFrame
-    tweets_df = scrape_tweets(start_date.strftime(
-        '%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), keyword, tweet_limit)
+    if start_date < end_date:
+        # Scrape tweets and create DataFrame
+        tweets_df = scrape_tweets(start_date.strftime(
+            '%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), keyword, tweet_limit)
 
-    # Display DataFrame
-    st.dataframe(tweets_df)
-    tweets_dict = tweets_df.to_dict('records')
-    scraped_data = {
-        "Scraped Word": keyword,
-        "Scraped Date": {
-            "start": start_date.strftime("%Y-%m-%d"),
-            "end": end_date.strftime("%Y-%m-%d")
-        },
-        "Scraped Data": tweets_dict
-    }
-    tweets_df['income'] = len(tweets_df)
-    if tweets_df.empty == False:
-        if st.button('Upload to MongoDB'):
-            tweets_collection.insert_one(scraped_data)
-            st.success('Tweets uploaded to MongoDB')
+        # Display DataFrame
+        st.dataframe(tweets_df)
 
-        if st.button('Download'):
-            csv_file = download_csv(tweets_df)
-            st.download_button(
-                label="Download CSV",
-                data=csv_file,
-                file_name=f"{keyword}_tweets.csv",
-                mime="text/csv"
-            )
-            st.download_button(
-                label="Download JSON",
-                data=tweets_df.to_json(orient='records'),
-                file_name=f"{keyword}_tweets.json",
-                mime="application/json"
-            )
+        tweets_dict = tweets_df.to_dict('records')
+        scraped_data = {
+            "Scraped Word": keyword,
+            "Scraped Date": {
+                "start": start_date.strftime("%Y-%m-%d"),
+                "end": end_date.strftime("%Y-%m-%d")
+            },
+            "Scraped Data": tweets_dict
+        }
+        tweets_df['income'] = len(tweets_df)
+        if tweets_df.empty == False:
+            if st.button('Upload to MongoDB'):
+                tweets_collection.insert_one(scraped_data)
+                st.success('Tweets uploaded to MongoDB')
+
+            if st.button('Download'):
+                csv_file = download_csv(tweets_df)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv_file,
+                    file_name=f"{keyword}_tweets.csv",
+                    mime="text/csv"
+                )
+                st.download_button(
+                    label="Download JSON",
+                    data=tweets_df.to_json(orient='records'),
+                    file_name=f"{keyword}_tweets.json",
+                    mime="application/json"
+                )
+    elif start_date == end_date:
+        st.warning('Start date and end date cannot be same')
+    else:
+        st.warning('Start date cannot be greater than end date')
+
 else:
     st.warning('Fill all the inputs to search for tweets')
